@@ -82,6 +82,7 @@
 
     // this is a list of three-vectors represented in row-major matrix form
     let wireframe_points = engine.get_local_vertex_positions_of_mesh_object_wireframe(0);
+    let mesh_points = engine.get_local_vertex_positions_of_mesh_object(0);
 
     // matrix will be an array of arrays in row-major format
     // [
@@ -103,8 +104,17 @@
     // [m10],
     // [m20]
     // ]
+    function dot_3(v1, v2) {
+        let result = 0;
+        for (let i = 0; i < 3; i++) {
+            result += v1[i]*v2[i];
+        }
+        return result;
+    }
+
     function multiply_3x3_matrix_and_3x1_vector(matrix, vector) {
         // todo: implement this function!
+        return matrix.map(row => dot_3(row, vector));
     }
 
     engine.animation_loop(() => {
@@ -112,14 +122,18 @@
 
         // todo: use your new multiply_3x3_matrix_and_3x1_vector and a map function to get new_standard_points and new_wireframe_points variables
         // todo: that are made by multiplying m by all the points in these respective lists.
-
+        let new_standard_points = standard_points.map(point => multiply_3x3_matrix_and_3x1_vector(m, point));
+        let new_wireframe_points = wireframe_points.map(point => multiply_3x3_matrix_and_3x1_vector(m, point));
+        let new_mesh_points = mesh_points.map(point => multiply_3x3_matrix_and_3x1_vector(m, point));
 
         if (settings.draw_points) {
             // todo: draw debug spheres centered at all points in new_standard_points with the radius settings.point_size and color 0xeeee00.
-
-
+            new_standard_points.forEach(point => engine.draw_debug_sphere(
+                point, settings.point_size, 0xeeee00, 0.9));
         }
 
+        engine.update_vertex_positions_of_mesh_object_wireframe(0, new_wireframe_points);
+        engine.update_vertex_positions_of_mesh_object(0, new_mesh_points);
 
         engine.mesh_objects[0].visible = settings.mesh_visible;
         engine.set_mesh_object_wireframe_visibility(0, settings.wireframe_visible);
